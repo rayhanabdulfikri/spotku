@@ -1,0 +1,629 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[indonesian]{babel}
+\usepackage{geometry}
+\geometry{top=2.5cm, bottom=2.5cm, left=3cm, right=2.5cm}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, shadows, calc}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=teal,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={Panduan Presentasi Project SpotKu},
+}
+
+% Pengaturan Warna Code Snippet & TikZ
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.96,0.96,0.96}
+\definecolor{boxblue}{rgb}{0.90,0.94,0.98}
+\definecolor{darkblue}{rgb}{0.10,0.30,0.60}
+\definecolor{nodeblue}{rgb}{0.85,0.92,1.0}
+\definecolor{nodegreen}{rgb}{0.85,0.95,0.88}
+\definecolor{nodeorange}{rgb}{1.0,0.92,0.85}
+
+% Gaya Node TikZ
+\tikzstyle{startstop} = [rectangle, rounded corners=12pt, minimum width=3cm, minimum height=1cm, text centered, draw=darkblue, fill=nodeblue, font=\bfseries\small, drop shadow]
+\tikzstyle{screen} = [rectangle, rounded corners=6pt, minimum width=3.2cm, minimum height=1cm, text centered, draw=teal!80!black, fill=nodegreen, text width=3cm, font=\small, drop shadow]
+\tikzstyle{process} = [rectangle, rounded corners=6pt, minimum width=3.2cm, minimum height=1cm, text centered, draw=blue!80!black, fill=boxblue, text width=3cm, font=\small, drop shadow]
+\tikzstyle{decision} = [diamond, aspect=2, minimum width=2.8cm, minimum height=0.8cm, text centered, draw=orange!90!black, fill=nodeorange, text width=2.6cm, font=\scriptsize\bfseries, drop shadow]
+\tikzstyle{arrow} = [thick,->,>=stealth,color=darkblue]
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue}\bfseries,
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\tcbuselibrary{skins,breakable}
+\newtcolorbox{highlightbox}[1][]{
+  colback=boxblue,
+  colframe=darkblue,
+  fonttitle=\bfseries,
+  title=#1,
+  arc=2mm,
+  breakable
+}
+
+\title{
+    \textbf{\Large BUKU PANDUAN \& DOKUMENTASI TEKNIS PRESENTASI PROJECT SPOTKU}\\[0.5em]
+    \large Perancangan Aplikasi Diari Perjalanan \& Kenangan Berbasis Mobile (Android)\\
+    menggunakan Flutter, Firebase, dan OpenStreetMap
+}
+\author{\textbf{Dokumentasi Akademik Presentasi Dosen}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Pendahuluan \& Gambaran Umum (Elevator Pitch)}
+
+\textbf{SpotKu} adalah aplikasi \textit{mobile} berbasis Android yang dirancang sebagai diari perjalanan digital (\textit{Travel \& Memory Diary}). Aplikasi ini memungkinkan pengguna mencatat tempat-tempat berkesan yang dikunjungi lengkap dengan foto/video lokasi, catatan pribadi, serta penandaan koordinat geografis presisi di atas peta interaktif.
+
+\subsection{Spesifikasi Teknologi (Tech Stack)}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Bahasa Pemrograman}: Dart (SDK $\ge 3.3.0$)
+    \item \textbf{Framework UI}: Flutter (Material Design 3)
+    \item \textbf{Autentikasi}: Firebase Auth (Google Sign-In via OAuth 2.0)
+    \item \textbf{Database Cloud}: Cloud Firestore (NoSQL Realtime Database)
+    \item \textbf{Layanan Peta}: OpenStreetMap via \texttt{flutter\_map} (Tanpa Google Maps Billing)
+    \item \textbf{Integrasi Hardware HP}: 
+    \begin{itemize}
+        \item \texttt{geolocator}: Membaca posisi GPS (Latitude \& Longitude)
+        \item \texttt{image\_picker}: Mengakses Kamera HP untuk foto dan video
+        \item \texttt{flutter\_local\_notifications}: Memicu notifikasi lokal Android
+    \end{itemize}
+\end{itemize}
+
+---
+
+\section{Use Case \& Workflow Visual (TikZ Diagram)}
+
+\subsection{Daftar Use Case Sistem}
+
+\begin{table}[h!]
+\centering
+\small
+\begin{tabularx}{\textwidth}{l l l X l}
+\toprule
+\textbf{ID} & \textbf{Nama Use Case} & \textbf{Aktor} & \textbf{Deskripsi Singkat} & \textbf{Layanan/Hardware} \\
+\midrule
+UC-01 & Login Akun Google & User & Masuk ke aplikasi menggunakan akun Gmail tanpa password manual. & Firebase Auth \& OAuth 2.0 \\
+UC-02 & Peta Spot Realtime & User & Melihat peta dunia dengan pin merah lokasi kenangan. & OpenStreetMap \& Firestore \\
+UC-03 & Tambah Spot Baru & User & Memotret foto/video, baca GPS otomatis, dan simpan catatan. & Kamera, GPS, \& Firestore \\
+UC-04 & Lihat Detail Spot & User & Mengklik pin merah di peta untuk melihat foto \& koordinat. & Memori Lokal HP \\
+UC-05 & Notifikasi Pengingat & User & Menjalankan timer 5 detik untuk menguji notifikasi Android. & Local Notifications \\
+UC-06 & Logout & User & Keluar dari sesi akun dan kembali ke layar login. & Firebase Auth \\
+\bottomrule
+\end{tabularx}
+\caption{Daftar Spesifikasi Use Case Aplikasi SpotKu}
+\end{table}
+
+\newpage
+\subsection{Diagram Vektor Visual Alur Kerja Pengguna (TikZ Flowchart)}
+
+Diagram di bawah ini secara visual memperlihatkan bagaimana pengguna berinteraksi dengan sistem aplikasi SpotKu dari proses awal pembukaan aplikasi hingga penambahan tempat baru:
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[node distance=1.8cm and 1.5cm, auto]
+    % Nodes
+    \node (start) [startstop] {START: Buka App};
+    \node (auth) [decision, below=of start] {Status Login Firebase?};
+    \node (login) [screen, left=of auth] {LoginScreen\\(Google Sign-In)};
+    \node (oauth) [process, below=of login] {Otentikasi OAuth 2.0\\Firebase Auth};
+    \node (home) [screen, below=of auth, yshift=-0.5cm] {HomeScreen\\(Peta OpenStreetMap)};
+    \node (action) [decision, below=of home] {Pilihan Aksi User?};
+    \node (add) [screen, left=of action] {AddSpotScreen\\(Form Kenangan)};
+    \node (gpscam) [process, below=of add] {1. GPS (Geolocator)\\2. Kamera (ImagePicker)};
+    \node (firestore) [process, below=of gpscam] {Simpan Dokumen ke\\Cloud Firestore};
+    \node (detail) [screen, right=of action] {DetailScreen\\(Detail Spot \& Foto)};
+    \node (notif) [process, below=of detail] {Notifikasi Timer 5s\\(Local Notifications)};
+
+    % Lines / Arrows
+    \draw [arrow] (start) -- (auth);
+    \draw [arrow] (auth) -- node[anchor=south] {Belum} (login);
+    \draw [arrow] (login) -- (oauth);
+    \draw [arrow] (oauth) |- (home);
+    \draw [arrow] (auth) -- node[anchor=west] {Sudah} (home);
+    \draw [arrow] (home) -- (action);
+    \draw [arrow] (action) -- node[anchor=south] {Klik (+)} (add);
+    \draw [arrow] (add) -- (gpscam);
+    \draw [arrow] (gpscam) -- (firestore);
+    \draw [arrow] (firestore) |- (home);
+    \draw [arrow] (action) -- node[anchor=south] {Klik Pin} (detail);
+    \draw [arrow] (detail) -- (notif);
+\end{tikzpicture}
+\caption{Diagram Visual Alur Kerja Sistem SpotKu (TikZ Vector Flowchart)}
+\end{figure}
+
+---
+
+\section{Rasionalitas Keputusan Desain (Design Rationale)}
+
+\begin{highlightbox}[Mengapa Menggunakan OpenStreetMap daripada Google Maps SDK?]
+\textbf{Alasan Utama}: Google Maps SDK memerlukan pendaftaran kartu kredit (\textit{billing account}) di Google Cloud Platform untuk mendapatkan API Key. Jika limit gratis terlampaui, Google Maps akan eror atau menagih biaya.\\
+\textbf{Keunggulan}: OpenStreetMap bersifat 100\% \textit{open-source} dan gratis tanpa API Key. Paket \texttt{flutter\_map} mengunduh ubin peta (\textit{map tiles}) secara langsung dan sangat ringan di Android.
+\end{highlightbox}
+
+\begin{highlightbox}[Mengapa Berkas Foto Disimpan secara Lokal (\texttt{media\_url})?]
+\textbf{Alasan Utama}: Mengunggah file media berukuran besar ke Firebase Storage membutuhkan koneksi internet yang kencang, kuota besar, dan biaya langganan cloud storage.\\
+\textbf{Keunggulan}: Dengan menyimpan alamat path file di memori internal HP (misal: \texttt{/data/user/0/.../image.jpg}), proses simpan spot dapat dilakukan secara \textbf{seketika (\textit{instant})} tanpa bergantung pada kecepatan upload internet.
+\end{highlightbox}
+
+\begin{highlightbox}[Mengapa Menggunakan \texttt{StreamBuilder} di Halaman Utama?]
+\textbf{Alasan Utama}: \texttt{FutureBuilder} hanya membaca data satu kali saat halaman pertama dibangun.\\
+\textbf{Keunggulan}: \texttt{StreamBuilder} membuka koneksi \textit{WebSocket} secara persisten dengan Cloud Firestore. Ketika ada data spot baru ditambahkan, marker di peta langsung diperbarui secara \textit{realtime} tanpa perlu melakukan \textit{refresh} manual.
+\end{highlightbox}
+
+---
+
+\section{Pembedahan Kode Berbaris \& Pengaruhnya ke Aplikasi}
+
+\subsection{File 1: Konfigurasi \texttt{pubspec.yaml}}
+
+\begin{lstlisting}[language=XML, firstnumber=9, caption=pubspec.yaml]
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # Autentikasi (gratis - Firebase Spark plan)
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  google_sign_in: ^6.2.1
+
+  # Database (gratis - Firestore free tier)
+  cloud_firestore: ^5.4.3
+
+  # Kamera (gratis, tanpa API key)
+  image_picker: ^1.1.2
+
+  # Peta (GRATIS, OpenStreetMap, tanpa API key / billing)
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
+  # Lokasi GPS (gratis)
+  geolocator: ^13.0.1
+
+  # Notifikasi lokal (gratis)
+  flutter_local_notifications: ^18.0.1
+  intl: ^0.19.0
+\end{lstlisting}
+
+\begin{highlightbox}[Penjelasan Rinci Nomor Baris \texttt{pubspec.yaml}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Baris 15--17}: Paket dasar Firebase, pengelola sesi login, dan pustaka penyedia dialog Google Sign-In.
+    \item \textbf{Baris 20}: Pustaka basis data cloud NoSQL Firestore untuk menyimpan dokumen spot kenangan.
+    \item \textbf{Baris 23}: Pustaka penghubung antarmuka aplikasi dengan kamera perangkat Android.
+    \item \textbf{Baris 26--27}: Pustaka perender peta ubin OpenStreetMap (\texttt{flutter\_map}) dan kalkulator objek geografis (\texttt{latlong2}).
+    \item \textbf{Baris 30}: Pustaka pembaca chip sensor GPS perangkat (\texttt{geolocator}).
+    \item \textbf{Baris 33}: Pustaka pembuat notifikasi pop-up lokal pada Android.
+\end{itemize}
+\end{highlightbox}
+
+\newpage
+\subsection{File 2: Inisialisasi \& Routing \texttt{lib/main.dart}}
+
+\begin{lstlisting}[language=Java, firstnumber=10, caption=lib/main.dart (main \& AuthGate)]
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await NotificationService.init();
+  } catch (e) {
+    debugPrint("Error saat inisialisasi Firebase/Notifikasi: $e");
+  }
+  
+  runApp(const SpotKuApp());
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasData) {
+          return const HomeScreen();
+        }
+        return const LoginScreen();
+      },
+    );
+  }
+}
+\end{lstlisting}
+
+\begin{highlightbox}[Penjelasan Rinci Nomor Baris \texttt{lib/main.dart}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Baris 11 (\texttt{WidgetsFlutterBinding.ensureInitialized()})}:\\
+    \textit{Pengaruh}: Memastikan sistem native Android telah siap menerima pemanggilan kode asinkron sebelum fungsi \texttt{runApp} dijalankan.
+    \item \textbf{Baris 14--17 (\texttt{Firebase.initializeApp()} \& \texttt{NotificationService.init()})}:\\
+    \textit{Pengaruh}: Menginisialisasi koneksi dengan server Firebase dan mengaktifkan saluran notifikasi Android.
+    \item \textbf{Baris 52--54 (\texttt{StreamBuilder<User?>})}:\\
+    \textit{Pengaruh}: Mendengarkan status login pengguna secara \textit{realtime}.
+    \item \textbf{Baris 60--63 (\texttt{snapshot.hasData})}:\\
+    \textit{Pengaruh}: Jika pengguna sudah terautentikasi, layar langsung menampilkan \texttt{HomeScreen}. Jika belum, aplikasi menampilkan \texttt{LoginScreen}.
+\end{itemize}
+\end{highlightbox}
+
+\newpage
+\subsection{File 3: Model Data \texttt{lib/models/spot\_model.dart}}
+
+\begin{lstlisting}[language=Java, firstnumber=3, caption=lib/models/spot\_model.dart]
+class Spot {
+  final String id;
+  final String userId;
+  final String title;
+  final String description;
+  final double latitude;
+  final double longitude;
+  final String mediaType; // "image" atau "video"
+  final String mediaUrl; // jalur file lokal di HP
+  final Timestamp? createdAt;
+
+  Spot({
+    required this.id,
+    required this.userId,
+    required this.title,
+    required this.description,
+    required this.latitude,
+    required this.longitude,
+    required this.mediaType,
+    required this.mediaUrl,
+    this.createdAt,
+  });
+
+  factory Spot.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Spot(
+      id: doc.id,
+      userId: data['user_id'] ?? '',
+      title: data['title'] ?? '',
+      description: data['description'] ?? '',
+      latitude: (data['latitude'] ?? 0).toDouble(),
+      longitude: (data['longitude'] ?? 0).toDouble(),
+      mediaType: data['media_type'] ?? 'image',
+      mediaUrl: data['media_url'] ?? '',
+      createdAt: data['created_at'],
+    );
+  }
+}
+\end{lstlisting}
+
+\begin{highlightbox}[Penjelasan Rinci Nomor Baris \texttt{lib/models/spot\_model.dart}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Baris 4--12}: Mendefinisikan atribut data lokasi kenangan (ID, ID User, Judul, Deskripsi, Latitude, Longitude, Tipe Media, Path File, dan Timestamp).
+    \item \textbf{Baris 26--39 (\texttt{Spot.fromFirestore})}:\\
+    \textit{Pengaruh}: Mengubah dokumen JSON dari Firestore menjadi objek Dart \texttt{Spot}. Operator \texttt{??} memberikan nilai \textit{fallback} default untuk mencegah timbulnya \textit{NullPointer Error}.
+\end{itemize}
+\end{highlightbox}
+
+\newpage
+\subsection{File 4: Layanan Notifikasi \texttt{lib/services/notification\_service.dart}}
+
+\begin{lstlisting}[language=Java, firstnumber=7, caption=lib/services/notification\_service.dart]
+  static Future<void> init() async {
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const initSettings = InitializationSettings(android: androidSettings);
+    await _plugin.initialize(initSettings);
+
+    // Meminta izin runtime notifikasi di Android 13+ (API 33 ke atas)
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      await androidPlugin.requestNotificationsPermission();
+    }
+  }
+
+  static Future<void> showGeofenceReminder({
+    required String placeName,
+    required String formattedDate,
+  }) async {
+    _notificationIdCounter++;
+    final currentId = _notificationIdCounter;
+
+    const androidDetails = AndroidNotificationDetails(
+      'spotku_geofence_channel',
+      'SpotKu Geofence Reminders',
+      channelDescription: 'Notifikasi otomatis saat dekat titik kenangan',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+      groupKey: 'com.project.spotkuapp.GEOFENCE_STACK',
+    );
+    const details = NotificationDetails(android: androidDetails);
+
+    await _plugin.show(
+      currentId,
+      'SpotKu - ' + placeName,
+      'Anda pernah mengunjungi tempat ini. (Ditandai: ' + formattedDate + ')',
+      details,
+    );
+  }
+\end{lstlisting}
+
+\begin{highlightbox}[Penjelasan Rinci Nomor Baris \texttt{lib/services/notification\_service.dart}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Baris 7--18 (\texttt{init()})}: Mendaftarkan ikon aplikasi (\texttt{ic\_launcher}) dan memanggil \texttt{requestNotificationsPermission()} untuk meminta izin notifikasi di layar HP Android 13+ (seperti Samsung A14).
+    \item \textbf{Baris 20--47 (\texttt{showGeofenceReminder})}: Mengirim notifikasi berulang dengan ID unik dan \texttt{groupKey} agar **menumpuk (*stacking*) layaknya pesan WhatsApp** saat pengguna berada di radius $\le$ 5 meter.
+    \item \textbf{Baris 49--51 (\texttt{cancelAllNotifications})}: Membersihkan seluruh tumpukan notifikasi ketika pengguna bergerak keluar dari radius 5 meter.
+\end{itemize}
+\end{highlightbox}
+
+\newpage
+\subsection{File 5: Layar Login \texttt{lib/screens/login\_screen.dart}}
+
+\begin{lstlisting}[language=Java, firstnumber=15, caption=lib/screens/login\_screen.dart]
+  Future<void> _signInWithGoogle() async {
+    setState(() => _loading = true);
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _loading = false);
+        return;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal masuk: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+\end{lstlisting}
+
+\begin{highlightbox}[Penjelasan Rinci Nomor Baris \texttt{lib/screens/login\_screen.dart}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Baris 18--22 (\texttt{GoogleSignIn().signIn()})}: Membuka dialog pilihan akun Google bawaan sistem Android.
+    \item \textbf{Baris 24--28 (\texttt{GoogleAuthProvider.credential})}: Mengambil token OAuth 2.0 (\texttt{idToken} dan \texttt{accessToken}).
+    \item \textbf{Baris 30 (\texttt{signInWithCredential})}: Mengirimkan token ke Firebase Auth untuk memverifikasi autentikasi pengguna.
+\end{itemize}
+\end{highlightbox}
+
+\newpage
+\subsection{File 6: Layar Utama Peta \texttt{lib/screens/home\_screen.dart}}
+
+\begin{lstlisting}[language=Java, firstnumber=34, caption=lib/screens/home\_screen.dart]
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('spots')
+            .where('user_id', isEqualTo: uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Terjadi error: ${snapshot.error}'));
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final spots =
+              snapshot.data!.docs.map((d) => Spot.fromFirestore(d)).toList();
+
+          final markers = spots.map((spot) {
+            return Marker(
+              point: LatLng(spot.latitude, spot.longitude),
+              width: 44,
+              height: 44,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DetailScreen(spot: spot),
+                    ),
+                  );
+                },
+                child: const Icon(
+                  Icons.location_pin,
+                  color: Colors.redAccent,
+                  size: 40,
+                ),
+              ),
+            );
+          }).toList();
+
+          return FlutterMap(
+            options: const MapOptions(
+              initialCenter: LatLng(-6.8871, 109.7745),
+              initialZoom: 13,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.spotku',
+              ),
+              MarkerLayer(markers: markers),
+            ],
+          );
+        },
+      ),
+\end{lstlisting}
+
+\begin{highlightbox}[Penjelasan Rinci Nomor Baris \texttt{lib/screens/home\_screen.dart}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Baris 35--38 (\texttt{where('user_id', isEqualTo: uid)})}: Menyaring dokumen Firestore agar hanya mengembalikan spot milik pengguna yang sedang aktif login.
+    \item \textbf{Baris 50--71 (\texttt{Marker \& GestureDetector})}: Mengkonversi pasangan nilai Latitude dan Longitude menjadi widget Pin Merah yang dapat di-klik untuk berpindah ke \texttt{DetailScreen}.
+    \item \textbf{Baris 73--85 (\texttt{FlutterMap \& TileLayer})}: Merender peta OpenStreetMap dengan titik awal Pemalang (-6.8871, 109.7745).
+\end{itemize}
+\end{highlightbox}
+
+\newpage
+\subsection{File 7: Layar Form Tambah Spot \texttt{lib/screens/add\_spot\_screen.dart}}
+
+\begin{lstlisting}[language=Java, firstnumber=32, caption=lib/screens/add\_spot\_screen.dart]
+  Future<void> _getCurrentLocation() async {
+    setState(() => _gettingLocation = true);
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) throw 'Layanan lokasi (GPS) tidak aktif';
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      final pos = await Geolocator.getCurrentPosition();
+      setState(() => _position = pos);
+    } catch (e) {
+      // Handling Error
+    }
+  }
+
+  Future<void> _pickPhoto() async {
+    final file =
+        await _picker.pickImage(source: ImageSource.camera, imageQuality: 70);
+    if (file != null) {
+      setState(() {
+        _mediaFile = file;
+        _mediaType = 'image';
+      });
+    }
+  }
+
+  Future<void> _save() async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    await FirebaseFirestore.instance.collection('spots').add({
+      'user_id': uid,
+      'title': _titleController.text.trim(),
+      'description': _descController.text.trim(),
+      'latitude': _position!.latitude,
+      'longitude': _position!.longitude,
+      'media_type': _mediaType,
+      'media_url': _mediaFile!.path,
+      'created_at': FieldValue.serverTimestamp(),
+    });
+
+    if (mounted) Navigator.pop(context);
+  }
+\end{lstlisting}
+
+\begin{highlightbox}[Penjelasan Rinci Nomor Baris \texttt{lib/screens/add\_spot\_screen.dart}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Baris 35--47 (\texttt{Geolocator.getCurrentPosition()})}: Memeriksa izin lokasi Android dan mengambil koordinat presisi dari sensor GPS HP.
+    \item \textbf{Baris 61--62 (\texttt{pickImage})}: Membuka aplikasi kamera untuk memotret lokasi dengan tingkat kompresi 70\%.
+    \item \textbf{Baris 104--113 (\texttt{collection('spots').add})}: Menyimpan dokumen baru ke Cloud Firestore.
+\end{itemize}
+\end{highlightbox}
+
+---
+
+\section{Panduan Step-by-Step Buka File \& Tampilan Aplikasi}
+
+\subsection{Langkah 1: Konfigurasi \& Bahan Pustaka (\texttt{pubspec.yaml})}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Navigasi}: Buka folder \texttt{spotku/} $\rightarrow$ Buka file \texttt{pubspec.yaml} (Baris 15--34).
+    \item \textbf{Fungsi \& Logika}: Mendaftarkan paket Firebase, Kamera, GPS, Peta OpenStreetMap, dan Notifikasi. Tanpa file ini, pemanggilan paket akan dianggap sebagai teks asing (\textit{Unresolved identifier}).
+    \item \textbf{Tampilan Aplikasi}: Tidak berwujud UI langsung, melainkan mengaktifkan fitur hardware kamera, GPS, dan unduh peta dari internet.
+\end{enumerate}
+
+\subsection{Langkah 2: Booting \& Pintu Masuk (\texttt{lib/main.dart})}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Navigasi}: Buka folder \texttt{lib/} $\rightarrow$ Buka file \texttt{lib/main.dart} (Baris 10--26 dan 47--66).
+    \item \textbf{Fungsi \& Logika}: Menyiapkan inisialisasi Firebase dan mengecek status login user (\texttt{AuthGate}). \texttt{AuthGate} WAJIB ada agar pengguna yang pernah login tidak perlu dipaksa login berulang kali.
+    \item \textbf{Tampilan Aplikasi}: Saat aplikasi dibuka, muncul indikator loading sebentar, lalu aplikasi menentukan apakah membuka \texttt{LoginScreen} atau \texttt{HomeScreen}.
+\end{enumerate}
+
+\subsection{Langkah 3: Layar Login Google (\texttt{lib/screens/login\_screen.dart})}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Navigasi}: Buka folder \texttt{lib/screens/} $\rightarrow$ Buka file \texttt{login\_screen.dart} (Baris 15--42).
+    \item \textbf{Fungsi \& Logika}: Membuka modal Google Sign-In dan mengirimkan token OAuth 2.0 ke Firebase Auth.
+    \item \textbf{Tampilan Aplikasi}: Menampilkan tombol \textit{''Masuk dengan Google''}. Saat diklik, muncul jendela modal bawaan Android pilihan email Gmail.
+\end{enumerate}
+
+\subsection{Langkah 4: Layar Peta Utama (\texttt{lib/screens/home\_screen.dart})}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Navigasi}: Buka folder \texttt{lib/screens/} $\rightarrow$ Buka file \texttt{home\_screen.dart} (Baris 34--39 dan 73--88).
+    \item \textbf{Fungsi \& Logika}: Membaca data kenangan Firestore secara \textit{realtime} dan merender peta OpenStreetMap beserta marker pin merah.
+    \item \textbf{Tampilan Aplikasi}: Peta interaktif penuh layar yang dapat digeser dan di-zoom, serta memiliki tombol melayang \textit{(+)} di kanan bawah.
+\end{enumerate}
+
+\subsection{Langkah 5: Form Tambah Spot (\texttt{lib/screens/add\_spot\_screen.dart})}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Navigasi}: Buka folder \texttt{lib/screens/} $\rightarrow$ Buka file \texttt{add\_spot\_screen.dart} (Baris 32--58, 60--69, dan 84--125).
+    \item \textbf{Fungsi \& Logika}: Membaca sensor GPS secara otomatis dan memotret lokasi via kamera HP.
+    \item \textbf{Tampilan Aplikasi}: Form input foto/video, kolom nama tempat, catatan, teks koordinat GPS otomatis, dan tombol \textit{''Simpan SpotKu''}.
+\end{enumerate}
+
+\subsection{Langkah 6: Rincian Spot \& Demo Notifikasi (\texttt{lib/screens/detail\_screen.dart})}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Navigasi}: Buka \texttt{lib/screens/detail\_screen.dart} dan \texttt{lib/services/notification\_service.dart}.
+    \item \textbf{Fungsi \& Logika}: Membuka foto dari memori internal HP dan menguji notifikasi pengingat Android dalam 5 detik.
+    \item \textbf{Tampilan Aplikasi}: Foto berukuran besar, teks koordinat desimal, dan tombol pengingat yang memicu \textit{banner} notifikasi melayang di atas layar HP.
+\end{enumerate}
+
+---
+
+\section{Naskah Presentasi untuk Dosen Penguji}
+
+Berikut adalah naskah presentasi berdurasi 2--3 menit yang dapat dihafalkan:
+
+\begin{tcolorbox}[colback=teal!5,colframe=teal!60,title=Naskah Presentasi Mahasiswa]
+``Selamat pagi/siang Bapak/Ibu Dosen Penguji. Hari ini saya mempresentasikan hasil perancangan project aplikasi Android bernama \textbf{SpotKu}.
+
+\textbf{SpotKu} merupakan aplikasi diari perjalanan digital berbasis peta interaktif yang dibangun menggunakan \textit{framework} Flutter dan \textit{backend} Google Firebase.
+
+Alur teknis utama aplikasi ini mencakup 5 komponen penting:
+\begin{enumerate}
+    \item \textbf{Autentikasi Aman}: Menggunakan Firebase Auth berbasis Google Sign-In dengan protokol OAuth 2.0.
+    \item \textbf{Peta Interaktif Open-Source}: Mengintegrasikan OpenStreetMap melalui paket \texttt{flutter\_map} sehingga aplikasi bebas biaya dan tanpa memerlukan pendaftaran API Key berbayar.
+    \item \textbf{Sinkronisasi Realtime}: Memanfaatkan \texttt{StreamBuilder} untuk mendengarkan perubahan koleksi Cloud Firestore secara langsung tanpa perlu \textit{refresh} manual.
+    \item \textbf{Integrasi Hardware HP}: Menggunakan \texttt{Geolocator} untuk mendeteksi koordinat GPS otomatis dan \texttt{ImagePicker} untuk mengambil foto/video langsung dari kamera HP.
+    \item \textbf{Service Notifikasi}: Menyediakan \texttt{NotificationService} lokal untuk pemicu pengingat kunjungan kembali.
+\end{enumerate}
+
+Demikian ringkasan sistem aplikasi SpotKu. Terima kasih dan saya siap menerima masukan atau pertanyaan dari Bapak/Ibu Dosen.''
+\end{tcolorbox}
+
+\end{document}

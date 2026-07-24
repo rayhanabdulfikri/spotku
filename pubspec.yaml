@@ -1,0 +1,45 @@
+name: spotku
+description: "SpotKu - Mini Travel & Memory Diary"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+
+  # Autentikasi (gratis - Firebase Spark plan)
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  google_sign_in: ^6.2.1
+
+  # Database (gratis - Firestore free tier)
+  cloud_firestore: ^5.4.3
+
+  # Kamera (gratis, tanpa API key)
+  image_picker: ^1.1.2
+
+  # Peta (GRATIS, OpenStreetMap, tanpa API key / billing)
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
+  # Lokasi GPS (gratis)
+  geolocator: ^13.0.1
+
+  # Notifikasi lokal (gratis)
+  flutter_local_notifications: ^18.0.1
+
+  intl: ^0.19.0
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

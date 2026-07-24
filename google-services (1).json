@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "935058642294",
+    "project_id": "spotku",
+    "storage_bucket": "spotku.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:935058642294:android:28439b4969c6e057ad1657",
+        "android_client_info": {
+          "package_name": "com.project.spotkuapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "935058642294-dslm70q1hb96e6pttdpdjan510ckdr4l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.project.spotkuapp",
+            "certificate_hash": "fab0e547434c578f8998d6aee561290e239a4ceb"
+          }
+        },
+        {
+          "client_id": "935058642294-vmoef6id3tenattsaa59c33emrusjdb8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.project.spotkuapp",
+            "certificate_hash": "79d55f784666fb02260a80e0b395c9273989f223"
+          }
+        },
+        {
+          "client_id": "935058642294-003jqb5vp31qu20dhv7vcr5vf0kagp1s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYk-7O0Sf2DU-uTmaUcnarYY71XpDKId4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "935058642294-003jqb5vp31qu20dhv7vcr5vf0kagp1s.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "935058642294-62v62usqiecjsa9t9fl37jekiuahqsrj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.spotku"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
