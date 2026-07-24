@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,8 +8,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../models/spot_model.dart';
-import '../services/geofence_service.dart';
-import '../widgets/gps_debug_panel.dart';
 import 'add_spot_screen.dart';
 import 'detail_screen.dart';
 
@@ -27,77 +23,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Spot? _selectedSpot;
   bool _isMapInitialized = false;
-
-  StreamSubscription<Position>? _positionSubscription;
   Position? _latestPosition;
   List<Spot> _cachedSpots = [];
 
-  @override
-  void initState() {
-    super.initState();
-    _startPositionListening();
-  }
-
-  @override
-  void dispose() {
-    _positionSubscription?.cancel();
-    GeofenceService().dispose();
-    super.dispose();
-  }
-
-  void _startPositionListening() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-    if (permission == LocationPermission.deniedForever ||
-        permission == LocationPermission.denied) {
-      return;
-    }
-
-    late LocationSettings locationSettings;
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      // Menggunakan Foreground Notification Service agar GPS Tetap Memantau Meskipun Aplikasi Ditutup
-      locationSettings = AndroidSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 0,
-        intervalDuration: const Duration(seconds: 2),
-        foregroundNotificationConfig: const ForegroundNotificationConfig(
-          notificationTitle: "SpotKu Pemantau Lokasi",
-          notificationText: "Memantau lokasi kenangan di latar belakang...",
-          notificationIcon: AndroidResource(name: 'ic_launcher'),
-          enableWakeLock: true,
-        ),
-      );
-    } else {
-      locationSettings = const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 0,
-      );
-    }
-
-    _positionSubscription =
-        Geolocator.getPositionStream(locationSettings: locationSettings)
-            .listen((Position position) {
-      if (mounted) {
-        setState(() {
-          _latestPosition = position;
-        });
-      }
-      if (_cachedSpots.isNotEmpty) {
-        GeofenceService().checkGeofence(
-          currentPosition: position,
-          spots: _cachedSpots,
-        );
-      }
-    });
-  }
-
   Future<void> _logout() async {
-    GeofenceService().dispose();
     await GoogleSignIn().signOut();
     await FirebaseAuth.instance.signOut();
   }
@@ -132,9 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
             .collection('spots')
             .doc(spot.id)
             .delete();
-
-        // Notifikasi & Timer langsung dibatalkan seketika
-        GeofenceService().onSpotDeleted(spot.id);
 
         if (context.mounted) {
           if (_selectedSpot?.id == spot.id) {
@@ -261,26 +187,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<LatLng> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return const LatLng(-6.8871, 109.7745);
+      }
 
-    if (!serviceEnabled) {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.deniedForever ||
+          permission == LocationPermission.denied) {
+        return const LatLng(-6.8871, 109.7745);
+      }
+
+      Position position = await Geolocator.getCurrentPosition();
+      _latestPosition = position;
+      return LatLng(position.latitude, position.longitude);
+    } catch (_) {
       return const LatLng(-6.8871, 109.7745);
     }
-
-    LocationPermission permission = await Geolocator.checkPermission();
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-
-    if (permission == LocationPermission.deniedForever ||
-        permission == LocationPermission.denied) {
-      return const LatLng(-6.8871, 109.7745);
-    }
-
-    Position position = await Geolocator.getCurrentPosition();
-    _latestPosition = position;
-    return LatLng(position.latitude, position.longitude);
   }
 
   @override
@@ -315,18 +243,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         _latestPosition = pos;
                       });
                       _mapController.move(LatLng(pos.latitude, pos.longitude), 16);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Lokasi GPS berhasil diperbarui'),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    }
-                    if (_cachedSpots.isNotEmpty) {
-                      GeofenceService().checkGeofence(
-                        currentPosition: pos,
-                        spots: _cachedSpots,
-                      );
                     }
                   } catch (e) {
                     if (context.mounted) {
@@ -373,14 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               _cachedSpots = spots;
 
-              if (_latestPosition != null && spots.isNotEmpty) {
-                GeofenceService().checkGeofence(
-                  currentPosition: _latestPosition!,
-                  spots: spots,
-                );
-              }
-
-              // Penanda Titik Spot Kenangan (Dot Marker Circle dengan Touch Area 44x44 Responsif)
+              // Penanda Titik Spot Kenangan
               final spotsMarkers = spots.map((spot) {
                 final isSelected = _selectedSpot?.id == spot.id;
                 return Marker(
@@ -436,134 +345,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               }).toList();
 
-              // Penanda Titik Lokasi Anda Saat Ini (Google Maps Style Blue Dot)
+              // Penanda Titik Lokasi Anda Saat Ini
               final userLatLng = _latestPosition != null
                   ? LatLng(_latestPosition!.latitude, _latestPosition!.longitude)
                   : currentLocation;
 
               final userLocationMarker = Marker(
                 point: userLatLng,
-                width: 48,
-                height: 48,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Halo Biru Transparan (Google Maps Pulse Ring)
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.blue.withValues(alpha: 0.22),
-                        border: Border.all(
-                            color: Colors.blue.withValues(alpha: 0.4), width: 1),
-                      ),
-                    ),
-                    // Titik Biru Utama dengan Border Putih Presisi
-                    Container(
-                      width: 18,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.blueAccent,
-                        border: Border.all(color: Colors.white, width: 3),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black38,
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-
-              // Hitung Spot Terdekat untuk Garis Dinamis & Distance Tooltip
-              Spot? nearestSpot;
-              double minDistance = double.infinity;
-              for (final spot in spots) {
-                final dist = Geolocator.distanceBetween(
-                  userLatLng.latitude,
-                  userLatLng.longitude,
-                  spot.latitude,
-                  spot.longitude,
-                );
-                if (dist < minDistance) {
-                  minDistance = dist;
-                  nearestSpot = spot;
-                }
-              }
-
-              // Buat Garis Polyline Dinamis & Tooltip Jarak ke Marker Terdekat
-              Polyline? dynamicPolyline;
-              Marker? distanceLabelMarker;
-
-              if (nearestSpot != null && minDistance.isFinite) {
-                final spotLatLng = LatLng(nearestSpot.latitude, nearestSpot.longitude);
-                final isInside = minDistance <= GeofenceService().entryRadiusMeters;
-
-                dynamicPolyline = Polyline(
-                  points: [userLatLng, spotLatLng],
-                  strokeWidth: 3.0,
-                  color: isInside ? Colors.green.shade600 : Colors.teal.shade600,
-                  borderStrokeWidth: 1.5,
-                  borderColor: Colors.white,
-                );
-
-                // Hitung koordinat tengah (Midpoint) untuk memasang badge jarak
-                final midLat = (userLatLng.latitude + spotLatLng.latitude) / 2;
-                final midLng = (userLatLng.longitude + spotLatLng.longitude) / 2;
-                final distText = minDistance >= 1000
-                    ? "${(minDistance / 1000).toStringAsFixed(2)} km"
-                    : "${minDistance.toStringAsFixed(1)} m";
-
-                distanceLabelMarker = Marker(
-                  point: LatLng(midLat, midLng),
-                  width: 96,
-                  height: 28,
+                width: 40,
+                height: 40,
+                child: Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    width: 18,
+                    height: 18,
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isInside ? Colors.greenAccent : Colors.tealAccent,
-                        width: 1.2,
-                      ),
+                      shape: BoxShape.circle,
+                      color: Colors.blueAccent,
+                      border: Border.all(color: Colors.white, width: 3),
                       boxShadow: const [
                         BoxShadow(
                           color: Colors.black38,
                           blurRadius: 4,
                           offset: Offset(0, 2),
-                        )
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isInside ? Icons.check_circle : Icons.straighten,
-                          size: 11,
-                          color: isInside ? Colors.greenAccent : Colors.tealAccent,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          distText,
-                          style: TextStyle(
-                            color: isInside ? Colors.greenAccent : Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
-                          ),
                         ),
                       ],
                     ),
                   ),
-                );
-              }
+                ),
+              );
 
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!_isMapInitialized) {
@@ -613,10 +422,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         userAgentPackageName: 'com.example.spotku',
                       ),
-                      if (dynamicPolyline != null)
-                        PolylineLayer(polylines: [dynamicPolyline]),
-                      if (distanceLabelMarker != null)
-                        MarkerLayer(markers: [distanceLabelMarker]),
                       MarkerLayer(markers: [userLocationMarker]),
                       MarkerLayer(markers: spotsMarkers),
                       if (_selectedSpot != null)
@@ -717,8 +522,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: const Icon(Icons.my_location),
                     ),
                   ),
-                  if (kDebugMode)
-                    GpsDebugPanel(spots: spots),
                 ],
               );
             },

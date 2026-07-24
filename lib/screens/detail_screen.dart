@@ -6,7 +6,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/spot_model.dart';
-import '../services/geofence_service.dart';
 
 class DetailScreen extends StatefulWidget {
   final Spot spot;
@@ -180,9 +179,6 @@ class _DetailScreenState extends State<DetailScreen> {
             .doc(widget.spot.id)
             .delete();
 
-        // Notifikasi & Timer langsung dibatalkan seketika
-        GeofenceService().onSpotDeleted(widget.spot.id);
-
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Spot "${widget.spot.title}" berhasil dihapus')),
@@ -286,103 +282,6 @@ class _DetailScreenState extends State<DetailScreen> {
               style: const TextStyle(fontSize: 14, height: 1.4),
             ),
             const SizedBox(height: 16),
-
-            // KARTU 1: Status Jarak Realtime (Live Distance Card)
-            FutureBuilder<Position>(
-              future: Geolocator.getCurrentPosition(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2)),
-                          SizedBox(width: 12),
-                          Text('Menghitung jarak GPS...'),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                final currentPos = snapshot.data!;
-                final distanceMeters = Geolocator.distanceBetween(
-                  currentPos.latitude,
-                  currentPos.longitude,
-                  spot.latitude,
-                  spot.longitude,
-                );
-
-                final bool isInside15m = distanceMeters <= 15.0;
-
-                return Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                      color: isInside15m ? Colors.green : Colors.teal.shade200,
-                      width: 1.5,
-                    ),
-                  ),
-                  color: isInside15m ? Colors.green.shade50 : Colors.teal.shade50,
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              isInside15m
-                                  ? Icons.check_circle
-                                  : Icons.near_me_outlined,
-                              color: isInside15m ? Colors.green : Colors.teal,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                isInside15m
-                                    ? '🎯 Anda Sedang Berada di Dalam Radius Geofence!'
-                                    : '📍 Status Jarak Lokasi Saat Ini',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      isInside15m ? Colors.green.shade900 : Colors.teal.shade900,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          distanceMeters >= 1000
-                              ? 'Jarak: ${(distanceMeters / 1000).toStringAsFixed(2)} km dari posisi Anda'
-                              : 'Jarak: ${distanceMeters.toStringAsFixed(1)} meter dari posisi Anda',
-                          style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isInside15m
-                              ? 'Notifikasi pengingat otomatis aktif (Radius <= 15m).'
-                              : 'Dekati lokasi ini hingga radius <= 15 meter untuk memicu pengingat otomatis.',
-                          style: TextStyle(
-                              fontSize: 12,
-                              color: isInside15m
-                                  ? Colors.green.shade800
-                                  : Colors.grey.shade700),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
 
             // KARTU 2: Rincian Informasi Waktu, Koordinat, & Kualitas Akurasi Marker
             Card(

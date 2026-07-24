@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
-import 'services/notification_service.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -17,10 +16,9 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    await NotificationService.init();
   } catch (e) {
     // Pesan ini akan muncul di terminal (Debug Console) jika ada error
-    debugPrint("Error saat inisialisasi Firebase/Notifikasi: $e");
+    debugPrint("Error saat inisialisasi Firebase: $e");
   }
   
   runApp(const SpotKuApp());
